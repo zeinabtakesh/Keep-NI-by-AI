@@ -1,1 +1,1 @@
-# Keep-NI (An Eye)-by-AI
+# Keep NI (An Eye) by AI
