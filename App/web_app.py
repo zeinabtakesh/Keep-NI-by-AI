@@ -56,11 +56,11 @@ def login():
     return render_template('sign-in.html')
 
 # ----------------- Logout -----------------
+
 @app.route('/logout')
 def logout():
-    session.pop('user', None)
-    flash('You have been logged out.', 'info')
-    return redirect(url_for('login'))
+    session.clear()  # Completely clears all session variables
+    return redirect(url_for('login'))  # Redirect directly to login
 
 # ----------------- Main Dashboard -----------------
 @app.route('/')

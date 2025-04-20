@@ -262,6 +262,12 @@ Respond with a JSON object containing:
         # If suspicious, save frames as backup
         if is_suspicious and 'frames' in video_info:
             self.save_footage(video_info['frames'], timestamp)
+        # 🔊 Server-side Buzz Sound
+        try:
+            from playsound import playsound
+            playsound("static/buzz.mp3", block=False)
+        except Exception as e:
+            print("[BUZZ ERROR]", e)
 
     def process_video_clip(self, video_path_info):
         """Queue a video for asynchronous processing with the inference engine."""
