@@ -611,16 +611,36 @@ Please provide:
         """Query logged events using ChatGPT API."""
         with open(self.data_dir / "metadata.txt", "r") as f:
             metadata = f.read()
-        prompt = f"""Based on the following CCTV metadata, answer this query: {query}
 
-{metadata}
+        prompt = f"""
+    You are an intelligent security assistant reviewing CCTV surveillance logs.
 
-Please provide specific timestamps and locations for any matching events.
-"""
+    The user has asked: "{query}"
+
+    The logs below are in this format:
+    [YYYY-MM-DD HH:MM:SS] CameraName
+    Caption: description of what the camera saw
+    [optional]: 🚨 Suspicious Behavior Detected!
+    ------------------------------------------------------------
+
+    Please analyze and respond by:
+    1. Only referring to logs that directly match the query.
+    2. Filtering by time, date, behavior, or camera when applicable.
+    3. Ignoring unrelated logs.
+    4. If no relevant events are found, respond clearly: "No relevant activity found for the specified criteria."
+
+    Logs:
+    {metadata}
+    """
+
         response = self.client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
+            messages=[
+                {"role": "system", "content": "You are a helpful security analyst."},
+                {"role": "user", "content": prompt}
+            ]
         )
+
         return response.choices[0].message.content
 
     def set_storage_path(self, new_path):

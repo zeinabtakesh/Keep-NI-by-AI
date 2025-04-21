@@ -34,8 +34,8 @@ class VideoInferenceEngine:
                 print(f"[INFERENCE] Using local model path: {model_path}")
                 self.pipeline = pipeline("video-to-text", model=model_path, device=self.device)
             else:
-                print(f"[INFERENCE] Loading model from Hugging Face: NourFakih/TimeSformer-GPT2-UCF-7000")
-                self.pipeline = pipeline("video-to-text", model="NourFakih/TimeSformer-GPT2-UCF-7000", device=self.device)
+                print(f"[INFERENCE] Loading model from Hugging Face: NourFakih/TimeSfoormer-GPT2-UCF-7000") #Neleac/SpaceTimeGPT #NourFakih/TimeSfoormer-GPT2-UCF-7000
+                self.pipeline = pipeline("video-to-text", model="NourFakih/TimeSfoormer-GPT2-UCF-7000", device=self.device)
 
             # Set the clip length based on model requirements
             self.clip_len = 8  # Default for SpaceTimeGPT

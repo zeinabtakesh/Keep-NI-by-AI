@@ -58,13 +58,24 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.2);
     }
 
-    .table thead {
+    .scroll-table {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    .scroll-table thead th {
+      position: sticky;
+      top: 0;
       background-color: #585f70;
       color: white;
+      z-index: 1;
     }
 
     .suspicious {
       background-color: #ffe1e1;
+      font-weight: bold;
     }
 
     footer {
@@ -96,32 +107,45 @@
 </nav>
 
 <div class="main-content">
-  <h4 class="mb-4">Suspicious Activity Log</h4>
+  <h4 class="mb-4">Activity Log</h4>
+
   {% if alerts %}
-  <div class="table-responsive">
-    <table class="table table-bordered table-hover">
-      <thead>
-        <tr>
-          <th>Timestamp</th>
-          <th>Camera</th>
-          <th>Caption</th>
-          <th>Status</th>
-          <th>Reason</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for alert in alerts %}
-        <tr class="{% if alert.is_suspicious %}suspicious{% endif %}">
-          <td>{{ alert.timestamp }}</td>
-          <td>{{ alert.camera_name }}</td>
-          <td>{{ alert.caption }}</td>
-          <td>{{ 'Suspicious' if alert.is_suspicious else 'Normal' }}</td>
-          <td>{{ alert.reason }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+
+<form method="POST" class="mb-3 d-flex justify-content-between align-items-center">
+  <label for="camera" class="me-2 mb-0 fw-semibold">Filter by Camera:</label>
+  <select class="form-select w-auto" name="camera" id="camera" onchange="this.form.submit()">
+    <option value="all" {% if selected_camera == 'all' %}selected{% endif %}>All Cameras</option>
+    {% for camera in available_cameras %}
+      <option value="{{ camera }}" {% if selected_camera == camera %}selected{% endif %}>{{ camera }}</option>
+    {% endfor %}
+  </select>
+</form>
+
+
+    <div class="scroll-table">
+      <table class="table table-bordered table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Camera</th>
+            <th>Caption</th>
+            <th>Status</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for alert in alerts %}
+            <tr class="{% if alert.is_suspicious %}suspicious{% endif %}">
+              <td>{{ alert.timestamp }}</td>
+              <td>{{ alert.camera_name }}</td>
+              <td>{{ alert.caption }}</td>
+              <td>{{ 'Suspicious' if alert.is_suspicious else 'Normal' }}</td>
+              <td>{{ alert.reason }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   {% else %}
     <p class="text-muted">No alerts available yet.</p>
   {% endif %}

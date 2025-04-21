@@ -90,17 +90,32 @@ def add_no_cache_headers(response):
     response.headers['Expires'] = '0'
     return response
 
-@app.route('/alerts')
+@app.route('/alerts', methods=['GET', 'POST'])
 def alerts():
     if 'user' not in session:
         return redirect(url_for('login'))
 
     from cctv_monitor import CCTVMonitor
     monitor = CCTVMonitor()
+
+    # Extract camera names from the DataFrame
     df = monitor.captions_df.sort_values(by="timestamp", ascending=False)
+    available_cameras = df["camera_name"].unique().tolist()
+
+    selected_camera = request.form.get("camera", "all")
+    if selected_camera != "all":
+        df = df[df["camera_name"] == selected_camera]
 
     alerts_data = df.to_dict(orient='records')
-    return render_template('alerts.html', username=session['user'], alerts=alerts_data)
+    return render_template(
+        'alerts.html',
+        username=session['user'],
+        alerts=alerts_data,
+        available_cameras=available_cameras,
+        selected_camera=selected_camera
+    )
+
+
 
 @app.route('/chat', methods=['GET', 'POST'])
 def chat():
@@ -120,6 +135,18 @@ def chat():
             session.modified = True
 
     return render_template('chat.html', username=session['user'], chat_history=session['chat_history'])
+
+@app.route('/chat/clear', methods=['POST'])
+def clear_chat():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    session['chat_history'] = []
+    return redirect(url_for('chat'))
+
+@app.route('/alerts/clear', methods=['POST'])
+def clear_alerts():
+    open("alerts.json", "w").write("[]")
+    return redirect(url_for('alerts'))
 
 
 @app.route('/report')

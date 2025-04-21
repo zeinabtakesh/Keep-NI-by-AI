@@ -90,6 +90,20 @@
       padding: 0.5rem;
       background-color: rgba(0, 0, 0, 0.6);
     }
+
+    .loading-dots::after {
+      content: '';
+      display: inline-block;
+      width: 1em;
+      animation: dots 1s steps(3, end) infinite;
+    }
+
+    @keyframes dots {
+      0% { content: ''; }
+      33% { content: '.'; }
+      66% { content: '..'; }
+      100% { content: '...'; }
+    }
   </style>
 </head>
 <body>
@@ -121,17 +135,23 @@
 <div class="chat-container" id="chat-scroll">
   {% for q, r in chat_history %}
     <div class="chat-bubble chat-user"><strong>You:</strong> {{ q }}</div>
-    <div class="chat-bubble chat-bot"><strong>AI:</strong> {{ r }}</div>
+    <div class="chat-bubble chat-bot"><strong>GPT:</strong> {{ r }}</div>
   {% endfor %}
 </div>
 
 <!-- Input Box -->
-<form method="POST" class="chat-input">
-  <div class="input-group">
-    <input type="text" name="query" class="form-control" placeholder="Type your message..." required>
-    <button type="submit" class="btn btn-primary">Send</button>
-  </div>
-</form>
+<div class="chat-input">
+  <form id="chat-form" class="mb-2">
+    <div class="input-group">
+      <input type="text" id="query-input" name="query" class="form-control" placeholder="Type your message..." required>
+      <button type="submit" class="btn btn-outline-secondary btn-sm" style="background-color: rgb(73, 157, 200); color: white;">Send</button>
+    </div>
+  </form>
+
+  <form method="POST" action="{{ url_for('clear_chat') }}">
+    <button type="submit" class="btn btn-outline-secondary btn-sm">Clear Chat</button>
+  </form>
+</div>
 
 <!-- Footer -->
 <footer>
@@ -139,8 +159,55 @@
 </footer>
 
 <script>
-  const container = document.getElementById("chat-scroll");
-  container.scrollTop = container.scrollHeight;
+  const chatForm = document.getElementById("chat-form");
+  const input = document.getElementById("query-input");
+  const chatScroll = document.getElementById("chat-scroll");
+
+  chatForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const query = input.value.trim();
+    if (!query) return;
+
+    // Add user message
+    const userBubble = document.createElement("div");
+    userBubble.className = "chat-bubble chat-user";
+    userBubble.innerHTML = `<strong>You:</strong> ${query}`;
+    chatScroll.appendChild(userBubble);
+
+    // Clear input
+    input.value = "";
+
+    // Add GPT loading bubble
+    const loadingBubble = document.createElement("div");
+    loadingBubble.className = "chat-bubble chat-bot";
+    loadingBubble.innerHTML = `<strong>GPT:</strong> <span class="loading-dots">...</span>`;
+    chatScroll.appendChild(loadingBubble);
+
+    scrollToBottom();
+
+    // Send message via fetch
+    const response = await fetch("{{ url_for('chat') }}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: `query=${encodeURIComponent(query)}`
+    });
+
+    const data = await response.json();  // Expecting JSON: { reply: "GPT's response" }
+
+    // Replace loading with real response
+    loadingBubble.innerHTML = `<strong>GPT:</strong> ${data.reply}`;
+    scrollToBottom();
+  });
+
+  function scrollToBottom() {
+    chatScroll.scrollTop = chatScroll.scrollHeight;
+  }
+
+  scrollToBottom(); // Scroll on load
 </script>
+
 </body>
 </html>
