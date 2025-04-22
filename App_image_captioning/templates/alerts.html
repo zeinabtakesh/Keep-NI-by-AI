@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Alerts - Keep N I</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background-image: url("{{ url_for('static', filename='login_bg.jpg') }}");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .navbar {
+      background-color: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      padding: 0.8rem 2rem;
+    }
+
+    .navbar-brand img {
+      height: 40px;
+    }
+
+    .nav-link {
+      font-weight: 500;
+      color: #333;
+      transition: background-color 0.3s ease;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+    }
+
+    .nav-link:hover {
+      background-color: rgba(88, 95, 112, 0.1);
+    }
+
+    .nav-link.active {
+      font-weight: 600;
+      color: #499dc8;
+    }
+
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      background-color: rgba(255, 255, 255, 0.95);
+      margin: 20px;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+
+    .scroll-table {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    .scroll-table thead th {
+      position: sticky;
+      top: 0;
+      background-color: #585f70;
+      color: white;
+      z-index: 1;
+    }
+
+    .suspicious {
+      background-color: #ffe1e1;
+      font-weight: bold;
+    }
+
+    footer {
+      text-align: center;
+      color: white;
+      padding: 0.5rem;
+      background-color: rgba(0, 0, 0, 0.6);
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg">
+  <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Keep N I Logo">
+  </a>
+  <div class="collapse navbar-collapse">
+    <ul class="navbar-nav me-auto">
+      <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Welcome</a></li>
+      <li class="nav-item"><a class="nav-link active" href="{{ url_for('alerts') }}">Alerts</a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ url_for('chat') }}">Chat</a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ url_for('report') }}">Report</a></li>
+    </ul>
+    <ul class="navbar-nav ms-auto align-items-center">
+      <li class="nav-item me-3"><span class="fw-semibold text-secondary">👤 {{ username }}</span></li>
+      <li class="nav-item"><a class="btn btn-outline-danger" href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="main-content">
+  <h4 class="mb-4">Activity Log</h4>
+
+  {% if alerts %}
+
+<form method="POST" class="mb-3 d-flex justify-content-between align-items-center">
+  <label for="camera" class="me-2 mb-0 fw-semibold">Filter by Camera:</label>
+  <select class="form-select w-auto" name="camera" id="camera" onchange="this.form.submit()">
+    <option value="all" {% if selected_camera == 'all' %}selected{% endif %}>All Cameras</option>
+    {% for camera in available_cameras %}
+      <option value="{{ camera }}" {% if selected_camera == camera %}selected{% endif %}>{{ camera }}</option>
+    {% endfor %}
+  </select>
+</form>
+
+
+    <div class="scroll-table">
+      <table class="table table-bordered table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Camera</th>
+            <th>Caption</th>
+            <th>Status</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for alert in alerts %}
+            <tr class="{% if alert.is_suspicious %}suspicious{% endif %}">
+              <td>{{ alert.timestamp }}</td>
+              <td>{{ alert.camera_name }}</td>
+              <td>{{ alert.caption }}</td>
+              <td>{{ 'Suspicious' if alert.is_suspicious else 'Normal' }}</td>
+              <td>{{ alert.reason }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted">No alerts available yet.</p>
+  {% endif %}
+</div>
+
+<footer>
+  © 2025 Keep N I • <a href="mailto:support@keepni.com" style="color: #66ccff;">Contact Support</a>
+</footer>
+
+</body>
+</html>
