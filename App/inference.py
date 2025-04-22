@@ -34,8 +34,8 @@ class VideoInferenceEngine:
                 print(f"[INFERENCE] Using local model path: {model_path}")
                 self.pipeline = pipeline("video-to-text", model=model_path, device=self.device)
             else:
-                print(f"[INFERENCE] Loading model from Hugging Face: Neleac/SpaceTimeGPT") #Neleac/SpaceTimeGPT #NourFakih/TimeSfoormer-GPT2-UCF-7000
-                self.pipeline = pipeline("video-to-text", model="Neleac/SpaceTimeGPT", device=self.device)
+                print(f"[INFERENCE] Loading model from Hugging Face: NourFakih/TimeSformer-GPT2-UCF-7000") #Neleac/SpaceTimeGPT #NourFakih/TimeSfoormer-GPT2-UCF-7000
+                self.pipeline = pipeline("video-to-text", model="NourFakih/TimeSformer-GPT2-UCF-7000", device=self.device)
 
             # Set the clip length based on model requirements
             self.clip_len = 8  # Default for SpaceTimeGPT
@@ -67,7 +67,7 @@ class VideoInferenceEngine:
             self.model = VisionEncoderDecoderModel.from_pretrained(model_path).to(self.device)
         else:
             print("[INFERENCE] Loading model from HuggingFace (this may take time)")
-            self.model = VisionEncoderDecoderModel.from_pretrained("Neleac/timesformer-gpt2-video-captioning").to(self.device)
+            self.model = VisionEncoderDecoderModel.from_pretrained("NourFakih/TimeSformer-GPT2-UCF-7000").to(self.device) #Neleac/SpaceTimeGPT #NourFakih/TimeSfoormer-GPT2-UCF-7000
         
         self.clip_len = self.model.config.encoder.num_frames
         print(f"[INFERENCE] Using legacy model with clip length: {self.clip_len}")
