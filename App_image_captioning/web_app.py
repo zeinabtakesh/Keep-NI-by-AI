@@ -115,8 +115,6 @@ def alerts():
         selected_camera=selected_camera
     )
 
-
-
 @app.route('/chat', methods=['GET', 'POST'])
 def chat():
     if 'user' not in session:
@@ -131,10 +129,17 @@ def chat():
             from cctv_monitor import CCTVMonitor
             monitor = CCTVMonitor()
             response = monitor.query_events(query)
+
+            # Update chat history
             session['chat_history'].append((query, response))
             session.modified = True
 
+            # 🔁 This handles the JS fetch call
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return {"reply": response}
+
     return render_template('chat.html', username=session['user'], chat_history=session['chat_history'])
+
 
 @app.route('/chat/clear', methods=['POST'])
 def clear_chat():

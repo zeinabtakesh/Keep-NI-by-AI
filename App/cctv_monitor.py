@@ -581,76 +581,122 @@ Respond with a JSON object containing:
             traceback.print_exc()
 
     def generate_report(self):
-        """Generate and save a summary report via ChatGPT API based on logged metadata."""
+        """Generate and save a summary report for today's activity using ChatGPT."""
         try:
-            with open(self.data_dir / "metadata.txt", "r") as f:
-                metadata = f.read()
-            prompt = f"""Generate a summary report of the CCTV monitoring data:
-            
-{metadata}
+            if self.captions_df.empty:
+                return "No data found. No alerts to summarize."
 
-Please provide:
-1. Total number of suspicious activities
-2. Timeline of events
-3. Most common types of suspicious activities
-4. Recommendations for security improvements
-"""
+            # Get today's date only
+            today = datetime.now().date()
+
+            # Filter DataFrame to keep only today’s alerts
+            self.captions_df['timestamp'] = pd.to_datetime(self.captions_df['timestamp'])
+            today_df = self.captions_df[self.captions_df['timestamp'].dt.date == today]
+
+            if today_df.empty:
+                return "No alerts were logged today."
+
+            # Generate metadata string from today’s alerts
+            metadata = ""
+            for _, row in today_df.iterrows():
+                metadata += f"Time: {row['timestamp']}\n"
+                metadata += f"Camera: {row['camera_name']}\n"
+                metadata += f"Caption: {row['caption']}\n"
+                metadata += f"Suspicious: {row['is_suspicious']}\n"
+                metadata += f"Reason: {row['reason']}\n"
+                metadata += "-" * 50 + "\n"
+
+            # Optional truncation if still too long
+            if len(metadata) > 10000:
+                metadata = metadata[-10000:]
+
+            # Generate report prompt
+            prompt = f"""Generate a summary report of today's CCTV monitoring data:
+
+    {metadata}
+
+    Please include:
+    1. Total number of suspicious activities
+    2. Timeline of key events
+    3. Most common types of suspicious behavior
+    4. Recommendations for improving security
+    """
+
             response = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": prompt}]
             )
+
             report = response.choices[0].message.content
-            with open(self.data_dir / "daily_report.txt", "w") as f:
+
+            with open(self.data_dir / "daily_report.txt", "w", encoding="utf-8") as f:
                 f.write(report)
+
+            print("[REPORT] Daily report generated successfully.")
             return report
+
         except Exception as e:
-            print(f"[ERROR] Report generation failed: {str(e)}")
+            print(f"[ERROR] Daily report generation failed: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return "Error generating report. Please check logs."
 
     def query_events(self, query):
         """Query logged events using ChatGPT API."""
-        with open(self.data_dir / "metadata.txt", "r") as f:
-            metadata = f.read()
+        try:
+            # Load metadata text file
+            with open(self.data_dir / "metadata.txt", "r", encoding="utf-8") as f:
+                metadata = f.read()
 
-        prompt = f"""
-    You are an intelligent security assistant reviewing CCTV surveillance logs.
+            #  Truncate if metadata is too long (safe buffer for GPT-3.5 token limit)
+            if len(metadata) > 24000:
+                metadata = metadata[-24000:]  # Keep recent logs only
 
-    The user has asked: "{query}"
+            #  Improved prompt with smart instructions
+            prompt = f"""
+    You are an intelligent CCTV analyst reviewing camera logs to assitant security guards.
 
-    The logs below are in this format:
-    [YYYY-MM-DD HH:MM:SS] CameraName
-    Caption: description of what the camera saw
-    [optional]: 🚨 Suspicious Behavior Detected!
-    ------------------------------------------------------------
+    Below is a collection of CCTV metadata logs from various cameras.
 
-    Please analyze and respond by:
-    1. Only referring to logs that directly match the query.
-    2. Filtering by time, date, behavior, or camera when applicable.
-    3. Ignoring unrelated logs.
-    4. If no relevant events are found, respond clearly: "No relevant activity found for the specified criteria."
+    Each entry includes:
+    - A timestamp
+    - The camera name
+    - A description (caption)
+    - A flag for suspicious activity
+    - A reason if suspicious activity occurred
 
-    Logs:
+    ------------------------
+    USER QUERY:
+    "{query}"
+    ------------------------
+
+    TASK:
+    1. Search through the logs and extract only the entries that directly match the user’s query.
+    2. Look for connections in time, people, behavior, or location.
+    3. Treat terms like “suspicious activity” and “suspicious behavior” as equivalent.
+    4. Interpret “today” as matching the date found in the logs if unspecified.
+    5. Only respond with relevant matches — no summaries or hallucinations.
+    6. Asking about suspicious activities, means asking about all events that contains Suspicious: True, so only return the corresponding captions as bullets points and between parenthesis indicate the timestamp and camera).
+    7. If yes, no question: answer first by yes or no.
+    
+    LOGS:
     {metadata}
     """
 
-        response = self.client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful security analyst."},
-                {"role": "user", "content": prompt}
-            ]
-        )
+            # Make the call to OpenAI's chat API
+            response = self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a helpful security analyst."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
 
-        return response.choices[0].message.content
+            return response.choices[0].message.content
 
-    def set_storage_path(self, new_path):
-        """Change the base storage path at runtime."""
-        self.base_storage_path = Path(new_path)
-        # If relative path is provided, make it absolute
-        if not self.base_storage_path.is_absolute():
-            cwd = Path.cwd()
-            self.base_storage_path = cwd / self.base_storage_path
-        self._create_storage_directories()
+        except Exception as e:
+            print(f"[ERROR] Chat query failed: {e}")
+            return "Sorry, I couldn't process your question right now due to system limitations."
 
     def get_current_storage_path(self):
         """Return the current storage path as a string."""

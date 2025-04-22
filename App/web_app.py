@@ -90,6 +90,39 @@ def add_no_cache_headers(response):
     response.headers['Expires'] = '0'
     return response
 
+#
+# @app.route('/alerts', methods=['GET', 'POST'])
+# def alerts():
+#     if 'user' not in session:
+#         return redirect(url_for('login'))
+#
+#     from cctv_monitor import CCTVMonitor
+#     monitor = CCTVMonitor()
+#
+#     # Load and sort alerts
+#     df = monitor.captions_df.sort_values(by="timestamp", ascending=False)
+#     available_cameras = df["camera_name"].unique().tolist()
+#
+#     # Handle camera filter
+#     selected_camera = request.form.get("camera", "all")
+#     if selected_camera != "all":
+#         df = df[df["camera_name"] == selected_camera]
+#
+#     # 🔊 Force first alert to be suspicious for testing
+#     if df.shape[0] > 0:
+#         df.iloc[0, df.columns.get_loc('is_suspicious')] = True
+#         df.iloc[0, df.columns.get_loc('reason')] = "Forced test suspicious activity"
+#         df.iloc[0, df.columns.get_loc('confidence')] = 0.99
+#
+#     alerts_data = df.to_dict(orient='records')
+#     return render_template(
+#         'alerts.html',
+#         username=session['user'],
+#         alerts=alerts_data,
+#         available_cameras=available_cameras,
+#         selected_camera=selected_camera
+#     )
+
 @app.route('/alerts', methods=['GET', 'POST'])
 def alerts():
     if 'user' not in session:
@@ -98,10 +131,11 @@ def alerts():
     from cctv_monitor import CCTVMonitor
     monitor = CCTVMonitor()
 
-    # Extract camera names from the DataFrame
+    # Load and sort alerts
     df = monitor.captions_df.sort_values(by="timestamp", ascending=False)
     available_cameras = df["camera_name"].unique().tolist()
 
+    # Handle camera filter
     selected_camera = request.form.get("camera", "all")
     if selected_camera != "all":
         df = df[df["camera_name"] == selected_camera]
@@ -116,7 +150,22 @@ def alerts():
     )
 
 
+@app.route('/latest-alert')
+def latest_alert():
+    from cctv_monitor import CCTVMonitor
+    monitor = CCTVMonitor()
 
+    df = monitor.captions_df.sort_values(by="timestamp", ascending=False)
+
+    if df.shape[0] > 0:
+        latest = df.iloc[0]
+        return {
+            "is_suspicious": bool(latest["is_suspicious"]),
+            "reason": latest["reason"],
+            "timestamp": latest["timestamp"],
+        }
+    else:
+        return {"is_suspicious": False}
 @app.route('/chat', methods=['GET', 'POST'])
 def chat():
     if 'user' not in session:
@@ -131,8 +180,14 @@ def chat():
             from cctv_monitor import CCTVMonitor
             monitor = CCTVMonitor()
             response = monitor.query_events(query)
+
+            # Update chat history
             session['chat_history'].append((query, response))
             session.modified = True
+
+            # 🔁 This handles the JS fetch call
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return {"reply": response}
 
     return render_template('chat.html', username=session['user'], chat_history=session['chat_history'])
 
@@ -182,7 +237,4 @@ def start_monitoring():
 
 # ----------------- Start App -----------------
 if __name__ == '__main__':
-    if __name__ == '__main__':
-        app.run(debug=True)
-
-
+    app.run(debug=True)

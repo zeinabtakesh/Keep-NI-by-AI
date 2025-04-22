@@ -108,44 +108,50 @@
 
 <div class="main-content">
   <h4 class="mb-4">Activity Log</h4>
+  <form method="POST" action="{{ url_for('clear_alerts') }}" class="mb-3">
+    <button type="submit" class="btn btn-outline-danger btn-sm">Clear All Alerts</button>
+  </form>
 
   {% if alerts %}
+  <form method="POST" class="mb-3 d-flex justify-content-between align-items-center">
+    <label for="camera" class="me-2 mb-0 fw-semibold">Filter by Camera:</label>
+    <select class="form-select w-auto" name="camera" id="camera" onchange="this.form.submit()">
+      <option value="all" {% if selected_camera == 'all' %}selected{% endif %}>All Cameras</option>
+      {% for camera in available_cameras %}
+        <option value="{{ camera }}" {% if selected_camera == camera %}selected{% endif %}>{{ camera }}</option>
+      {% endfor %}
+    </select>
+  </form>
 
-<form method="POST" class="mb-3 d-flex justify-content-between align-items-center">
-  <label for="camera" class="me-2 mb-0 fw-semibold">Filter by Camera:</label>
-  <select class="form-select w-auto" name="camera" id="camera" onchange="this.form.submit()">
-    <option value="all" {% if selected_camera == 'all' %}selected{% endif %}>All Cameras</option>
-    {% for camera in available_cameras %}
-      <option value="{{ camera }}" {% if selected_camera == camera %}selected{% endif %}>{{ camera }}</option>
-    {% endfor %}
-  </select>
-</form>
+  <!-- Stop Buzz Button -->
+  <button id="stopBuzz" class="btn btn-sm btn-danger mb-3" style="display: none;">
+    Stop Buzz
+  </button>
 
-
-    <div class="scroll-table">
-      <table class="table table-bordered table-hover mb-0">
-        <thead>
-          <tr>
-            <th>Timestamp</th>
-            <th>Camera</th>
-            <th>Caption</th>
-            <th>Status</th>
-            <th>Reason</th>
+  <div class="scroll-table">
+    <table class="table table-bordered table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Camera</th>
+          <th>Caption</th>
+          <th>Status</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for alert in alerts %}
+          <tr class="{% if alert.is_suspicious %}suspicious{% endif %}">
+            <td>{{ alert.timestamp }}</td>
+            <td>{{ alert.camera_name }}</td>
+            <td>{{ alert.caption }}</td>
+            <td>{{ 'Suspicious' if alert.is_suspicious else 'Normal' }}</td>
+            <td>{{ alert.reason }}</td>
           </tr>
-        </thead>
-        <tbody>
-          {% for alert in alerts %}
-            <tr class="{% if alert.is_suspicious %}suspicious{% endif %}">
-              <td>{{ alert.timestamp }}</td>
-              <td>{{ alert.camera_name }}</td>
-              <td>{{ alert.caption }}</td>
-              <td>{{ 'Suspicious' if alert.is_suspicious else 'Normal' }}</td>
-              <td>{{ alert.reason }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% else %}
     <p class="text-muted">No alerts available yet.</p>
   {% endif %}
@@ -154,6 +160,47 @@
 <footer>
   © 2025 Keep N I • <a href="mailto:support@keepni.com" style="color: #66ccff;">Contact Support</a>
 </footer>
+
+<!-- Shared buzz element for alerts + global polling -->
+<audio id="buzz" src="{{ url_for('static', filename='buzz.mp3') }}" preload="auto" loop></audio>
+
+<script>
+  const alerts = {{ alerts|tojson }};
+  const hasSuspicious = alerts.some(alert => alert.is_suspicious);
+  const buzz = document.getElementById("buzz");
+  const stopBtn = document.getElementById("stopBuzz");
+
+  if (hasSuspicious) {
+    buzz.play().catch(err => console.warn("Autoplay failed:", err));
+    stopBtn.style.display = "inline-block";
+  }
+
+  stopBtn.addEventListener("click", () => {
+    buzz.pause();
+    buzz.currentTime = 0;
+    stopBtn.style.display = "none";
+  });
+
+  // Global polling to keep buzz alive if suspicious activity logged
+  let buzzPlayed = hasSuspicious;
+
+  async function checkLatestAlert() {
+    try {
+      const res = await fetch('/latest-alert');
+      const data = await res.json();
+
+      if (data.is_suspicious && !buzzPlayed) {
+        buzz.play().catch(e => console.warn("Global autoplay error:", e));
+        buzzPlayed = true;
+        stopBtn.style.display = "inline-block";
+      }
+    } catch (err) {
+      console.error("Failed to fetch latest alert:", err);
+    }
+  }
+
+  setInterval(checkLatestAlert, 5000);
+</script>
 
 </body>
 </html>
