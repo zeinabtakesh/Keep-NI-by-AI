@@ -1,5 +1,39 @@
 # Video Captioning Pipeline (SpaceTimeGPT)
 
+## 📂 File Structure & Descriptions
+
+- **`video_captioning/Split_UCF_Videos.ipynb`**  
+  • **Purpose:** Read the raw UCF-UCA JSON annotations and video files, then split each video into clips based on the provided timestamps.  
+  • **Actions:**  
+    1. Loaded `UCF-UCA` metadata and video paths  
+    2. Generated individual clip files (e.g. MP4s) for each `[start, end]` segment  
+    3. Saved clip-to-caption mappings for downstream processing  
+
+- **`video_captioning/Get-50-videospercategory.ipynb`**  
+  • **Purpose:** Balance the dataset by sampling a uniform number of videos per abnormality category.  
+  • **Actions:**  
+    1. Counted available videos in each class  
+    2. Randomly selected up to 150 per abnormal category, and 150 normals  
+    3. Logged the final train/val/test split lists  
+
+- **`video_captioning/Train-TimeSformerGPT2-UCF.ipynb`**  
+  • **Purpose:** Initial end-to-end training attempt of SpaceTimeGPT on the full set of clips.  
+  • **Actions:**  
+    1. Preprocessed clips into tensors (resizing, normalization)  
+    2. Configured SpaceTimeGPT model and training loop  
+    3. Launched training   
+    4. Logged memory usage and early diagnostics
+
+ - **`video_captioning/Test-video.ipynb`**  
+  • **Purpose:** Test the trained SpaceTimeGPT checkpoint on held-out clips and compute evaluation metrics..  
+  • **Actions:**  
+    1. Loaded the best model checkpoint.  
+    2. Ran inference on the test split of 500 clips. 
+    3. Launched training   
+    4. Logged memory usage and early diagnostics 
+
+Visualized sample ground-truth vs. predicted captions.
+---
 ## 1. Dataset Overview
 - **Dataset**: UCF-UCA (UCF Crime Abnormality)  
 - **Kaggle Link**: https://www.kaggle.com/datasets/username/ucf-uca  
@@ -42,16 +76,16 @@
   - Cons: Demands substantial memory/compute for large datasets
 
 ## 5. Training Attempts & Challenges
-- **Initial Training** (`proccess+train_ucf.ipynb`)  
+- **Initial Training** (`Train-TimeSformerGPT2-UCF.ipynb`)  
   - Used full training set → **GPU OOM errors**  
-- **Gradient Checkpointing** (`Process+resume_training.ipynb`)  
-  - Reduced memory footprint, but **slower** epochs  
 - **Portion-wise Fine-tuning**  
-  - Trained on subsets → coherent captions on common actions, **missed anomalies**  
+  - Trained on subsets → coherent captions on common actions.
 - **Key Challenges**  
   - **Resource Constraints**: Insufficient GPU RAM for >100k clips  
   - **Data Volume**: Need large-scale video+caption pairs  
   - **Overfitting**: Model learned “normal” patterns better than rare “anomalous” events
+ 
+
 
 ## 6. Decision & Future Work
 - **Current Focus**:  
