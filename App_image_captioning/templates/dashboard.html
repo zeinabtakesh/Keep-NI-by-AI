@@ -95,9 +95,12 @@
       In this platform, we will assist you with intelligent monitoring,<br>
       real-time alerts, and AI insights to enhance your security operations.
     </p>
-    <form method="POST" action="{{ url_for('start_monitoring') }}">
-      <button class="btn btn-primary mt-4" type="submit"> Start Monitoring</button>
+    <form action="/upload-video" method="POST" enctype="multipart/form-data">
+      <label for="video">Upload CCTV Footage (MP4):</label>
+      <input type="file" name="video" accept="video/mp4" required>
+      <button type="submit">Upload and Analyze</button>
     </form>
+
   </div>
 </div>
 

@@ -1,12 +1,55 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import os, json
+from datetime import datetime
+import pandas as pd
+
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key"
 USERS_FILE = "users.json"
 
 # ----------------- Utilities -----------------
+def extract_frames(video_path, num_frames=5, as_pil=True):
+    import cv2
+    import numpy as np
+    from PIL import Image
+
+    cap = cv2.VideoCapture(video_path)
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    if frame_count <= 0:
+        raise ValueError("Video has no frames")
+
+    sample_indices = np.linspace(0, frame_count - 1, num=num_frames, endpoint=False, dtype=int)
+    extracted_frames = []
+    i = 0
+    current_index = 0
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        if i in sample_indices:
+            if as_pil:
+                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                extracted_frames.append(Image.fromarray(rgb))
+            else:
+                extracted_frames.append(frame)
+
+            current_index += 1
+
+        if current_index >= num_frames:
+            break
+
+        i += 1
+
+    cap.release()
+    return extracted_frames
+
+
+
 def load_users():
     if not os.path.exists(USERS_FILE):
         with open(USERS_FILE, "w") as f:
@@ -130,11 +173,11 @@ def chat():
             monitor = CCTVMonitor()
             response = monitor.query_events(query)
 
-            # Update chat history
+            # Save to chat history
             session['chat_history'].append((query, response))
             session.modified = True
 
-            # 🔁 This handles the JS fetch call
+            # ✅ Return JSON if it's an AJAX (JS) request
             if request.headers.get("X-Requested-With") == "XMLHttpRequest":
                 return {"reply": response}
 
@@ -150,7 +193,21 @@ def clear_chat():
 
 @app.route('/alerts/clear', methods=['POST'])
 def clear_alerts():
-    open("alerts.json", "w").write("[]")
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    from cctv_monitor import CCTVMonitor
+    monitor = CCTVMonitor()
+
+    # Clear DataFrame and save
+    monitor.captions_df = pd.DataFrame(columns=[
+        'timestamp', 'camera_name', 'caption',
+        'is_suspicious', 'reason', 'confidence',
+        'image_path'
+    ])
+    monitor.save_data()
+
+    flash("All alerts cleared successfully.", "success")
     return redirect(url_for('alerts'))
 
 
@@ -167,23 +224,71 @@ def report():
     return render_template('report.html', username=session['user'], report=report_text)
 
 
-@app.route('/start-monitoring', methods=['POST'])
-def start_monitoring():
+@app.route('/upload-video', methods=['POST'])
+def upload_video():
     if 'user' not in session:
         return redirect(url_for('login'))
 
-    def run_monitor():
+    try:
+        file = request.files.get('video')
+        if not file:
+            flash("No video file provided.", "danger")
+            return redirect(url_for('dashboard'))
+
+        # Save the uploaded video
+        upload_folder = os.path.join("uploads")
+        os.makedirs(upload_folder, exist_ok=True)
+        video_path = os.path.join(upload_folder, file.filename)
+        file.save(video_path)
+
+        # Init helpers
         from cctv_monitor import CCTVMonitor
+        from inference import ImageInferenceEngine
         monitor = CCTVMonitor()
-        monitor.run()
+        engine = ImageInferenceEngine()
 
-    import threading
-    thread = threading.Thread(target=run_monitor)
-    thread.daemon = True
-    thread.start()
+        # Extract frames
+        frames = extract_frames(video_path, num_frames=3, as_pil=True)
+        if not frames:
+            flash("No frames could be extracted from the uploaded video.", "danger")
+            return redirect(url_for('dashboard'))
 
-    flash("Monitoring started. You can now check Alerts and Report.", "info")
+        for idx, frame in enumerate(frames):
+            frame_path = os.path.join(monitor.footage_dir, f"video_frame_{idx}.jpg")
+            frame.save(frame_path)
+
+            # Generate caption
+            caption = engine.caption_image(frame)
+            print(f"Frame {idx} caption: {caption}")
+
+            # Analyze with GPT
+            analysis = monitor.analyze_suspicious_activity(caption)
+
+            # Log in DataFrame
+            new_row = pd.DataFrame([{
+                'timestamp': datetime.now(),
+                'camera_name': file.filename,
+                'caption': caption,
+                'is_suspicious': analysis.get('is_suspicious', False),
+                'reason': analysis.get('reason', 'Normal activity'),
+                'confidence': analysis.get('confidence', 0.0),
+                'image_path': frame_path
+            }])
+            monitor.captions_df = pd.concat([monitor.captions_df, new_row], ignore_index=True)
+
+        # Save alerts
+        monitor.save_data()
+
+        flash(f"Successfully extracted, captioned, and logged {len(frames)} frames.", "success")
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        flash(f"An error occurred while processing the video: {str(e)}", "danger")
+
     return redirect(url_for('dashboard'))
+
+
 
 # ----------------- Start App -----------------
 if __name__ == '__main__':

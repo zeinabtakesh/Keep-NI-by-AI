@@ -199,8 +199,14 @@ Respond with a JSON object containing:
 - confidence: float (0-1)
 """
         response = self.client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
+
+                model="gpt-4-turbo",
+                messages=[
+                    {"role": "system", "content": prompt},
+                ],
+                temperature=0,
+                top_p=1,
+                seed=1234  # Set a fixed seed for deterministic results
         )
         try:
             result = json.loads(response.choices[0].message.content)
@@ -395,8 +401,14 @@ Respond with a JSON object containing:
     """
 
             response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt}]
+
+                model="gpt-4-turbo",
+                messages=[
+                    {"role": "system", "content": prompt},
+                ],
+                temperature=0,
+                top_p=1,
+                seed=1234  # Set a fixed seed for deterministic results
             )
 
             report = response.choices[0].message.content
@@ -413,62 +425,6 @@ Respond with a JSON object containing:
             traceback.print_exc()
             return "Error generating report. Please check logs."
 
-    def query_events(self, query):
-        """Query logged events using ChatGPT API."""
-        try:
-            # Load metadata text file
-            with open(self.data_dir / "metadata.txt", "r", encoding="utf-8") as f:
-                metadata = f.read()
-
-            # Truncate if metadata is too long (safe buffer for GPT-3.5 token limit)
-            if len(metadata) > 24000:
-                metadata = metadata[-24000:]  # Keep recent logs only
-
-            # Improved prompt with smart instructions
-            prompt = f"""
-    You are an intelligent CCTV analyst reviewing camera logs.
-
-    Below is a collection of CCTV metadata logs from various cameras.
-
-    Each entry includes:
-    - A timestamp
-    - The camera name
-    - A description (caption)
-    - A flag for suspicious activity
-    - A reason if suspicious activity occurred
-
-    ------------------------
-    USER QUERY:
-    "{query}"
-    ------------------------
-    
-    TASK:
-    1. Search through the logs and extract only the entries that directly match the user’s query.
-    2. Look for connections in time, people, behavior, or location.
-    3. Treat terms like “suspicious activity” and “suspicious behavior” as equivalent.
-    4. Interpret “today” as matching the date found in the logs if unspecified.
-    5. Only respond with relevant matches — no summaries or hallucinations.
-    6. Asking about suspicious activities, means asking about all events that contains Suspicious: True, so only return the corresponding captions as bullets points and between parenthesis indicate the timestamp and camera).
-    7. If yes, no question: answer first by yes or no.
-    
-    LOGS:
-    {metadata}
-    """
-
-            # Make the call to OpenAI's chat API
-            response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are a helpful security analyst."},
-                    {"role": "user", "content": prompt}
-                ]
-            )
-
-            return response.choices[0].message.content
-
-        except Exception as e:
-            print(f"[ERROR] Chat query failed: {e}")
-            return "Sorry, I couldn't process your question right now due to system limitations."
 
     #
 #     def generate_report(self):
@@ -497,35 +453,58 @@ Respond with a JSON object containing:
 #         except Exception as e:
 #             print(f"[ERROR] Report generation failed: {str(e)}")
 #             return "Error generating report. Please check logs."
-
     def query_events(self, query):
         """Query logged events using ChatGPT API."""
-        with open(self.data_dir / "metadata.txt", "r") as f:
-            metadata = f.read()
-        prompt = f"""Based on the following CCTV metadata, answer this query: {query}
+        try:
+            with open(self.data_dir / "metadata.txt", "r", encoding="utf-8") as f:
+                metadata = f.read()
 
-{metadata}
+            if len(metadata) > 24000:
+                metadata = metadata[-24000:]
 
-Please provide specific timestamps and locations for any matching events.
-"""
-        response = self.client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content
+            prompt = f"""
+    You are an intelligent CCTV analyst reviewing camera logs.
 
-    def set_storage_path(self, new_path):
-        """Change the base storage path at runtime."""
-        self.base_storage_path = Path(new_path)
-        # If relative path is provided, make it absolute
-        if not self.base_storage_path.is_absolute():
-            cwd = Path.cwd()
-            self.base_storage_path = cwd / self.base_storage_path
-        self._create_storage_directories()
+    Below is a collection of CCTV metadata logs from various cameras.
 
-    def get_current_storage_path(self):
-        """Return the current storage path as a string."""
-        return str(self.footage_dir.resolve())
+    Each entry includes:
+    - A timestamp
+    - The camera name
+    - A description (caption)
+    - A flag for suspicious activity
+    - A reason if suspicious activity occurred
+
+    ------------------------
+    USER QUERY:
+    "{query}"
+    ------------------------
+
+    TASK:
+    1. Search through the logs and extract only the entries that directly match the user’s query.
+    2. Look for connections in time, people, behavior, or location.
+    3. Treat terms like “suspicious activity” and “suspicious behavior” as equivalent.
+    4. Interpret “today” as matching the date found in the logs if unspecified.
+    5. Only respond with relevant matches — no summaries or hallucinations.
+    6. Asking about suspicious activities means showing all events with `Suspicious: True`. Return captions as bullet points with timestamps and camera.
+    7. If it's a yes/no question, respond with yes/no and evidence.
+
+    LOGS:
+    {metadata}
+    """
+
+            response = self.client.chat.completions.create(
+                model="gpt-4-turbo",
+                messages=[{"role": "system", "content": prompt}],
+                temperature=0,
+                top_p=1,
+                seed=1234
+            )
+
+            return response.choices[0].message.content
+
+        except Exception as e:
+            print(f"[ERROR] Chat query failed: {e}")
+            return "Sorry, I couldn't process your question right now due to system limitations."
 
 
 if __name__ == "__main__":

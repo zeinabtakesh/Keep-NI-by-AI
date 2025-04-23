@@ -38,10 +38,10 @@ class ImageInferenceEngine:
                 self.tokenizer = GPT2Tokenizer.from_pretrained(model_path)
                 self.feature_extractor = ViTImageProcessor.from_pretrained(model_path)
             else:
-                print(f"[INFERENCE] Loading model from Hugging Face: NourFakih/Vit-GPT2-UCA-UCF-01")
-                self.model = VisionEncoderDecoderModel.from_pretrained("NourFakih/Vit-GPT2-UCA-UCF-04")
-                self.tokenizer = GPT2Tokenizer.from_pretrained("NourFakih/Vit-GPT2-UCA-UCF-04")
-                self.feature_extractor = ViTImageProcessor.from_pretrained("NourFakih/Vit-GPT2-UCA-UCF-04")
+                print(f"[INFERENCE] Loading model from Hugging Face: NourFakih/Vit-GPT2-UCA-UCF-07")
+                self.model = VisionEncoderDecoderModel.from_pretrained("NourFakih/Vit-GPT2-UCA-UCF-07")
+                self.tokenizer = GPT2Tokenizer.from_pretrained("NourFakih/Vit-GPT2-UCA-UCF-07")
+                self.feature_extractor = ViTImageProcessor.from_pretrained("NourFakih/Vit-GPT2-UCA-UCF-07")
 
             # Create the pipeline
             self.image_captioner = pipeline(
@@ -191,7 +191,15 @@ class ImageInferenceEngine:
             print(f"[INFERENCE] Processing image: {image_path} ({file_size} bytes)")
 
             # Generate caption using the pipeline
-            result = self.image_captioner(image_path)
+            result = self.image_captioner(
+                image,
+                generate_kwargs={
+                    "max_length": 60,
+                    "min_length": 5,
+                    "num_beams": 4,
+                    "do_sample": False
+                }
+            )
 
             if result and isinstance(result, list) and len(result) > 0:
                 if 'generated_text' in result[0]:
@@ -222,7 +230,15 @@ class ImageInferenceEngine:
                 image = Image.fromarray(image)
 
             # Generate caption using the pipeline
-            result = self.image_captioner(image)
+            result = self.image_captioner(
+                image,
+                generate_kwargs={
+                    "max_length": 60,
+                    "min_length": 5,
+                    "num_beams": 4,
+                    "do_sample": False
+                }
+            )
 
             if result and isinstance(result, list) and len(result) > 0:
                 if 'generated_text' in result[0]:

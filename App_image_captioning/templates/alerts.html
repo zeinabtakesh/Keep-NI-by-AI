@@ -166,11 +166,20 @@
 
 <script>
   const alerts = {{ alerts|tojson }};
-  const hasSuspicious = alerts.some(alert => alert.is_suspicious);
   const buzz = document.getElementById("buzz");
   const stopBtn = document.getElementById("stopBuzz");
 
-  if (hasSuspicious) {
+  // Get the latest suspicious alert timestamp (if any)
+  const suspiciousAlerts = alerts.filter(alert => alert.is_suspicious);
+  const latestTimestamp = suspiciousAlerts.length ? suspiciousAlerts[0].timestamp : null;
+
+  const lastStoppedAt = localStorage.getItem("buzzStoppedAt");
+
+  const shouldBuzz =
+    suspiciousAlerts.length > 0 &&
+    (lastStoppedAt !== latestTimestamp); // New alert since last stop
+
+  if (shouldBuzz) {
     buzz.play().catch(err => console.warn("Autoplay failed:", err));
     stopBtn.style.display = "inline-block";
   }
@@ -179,28 +188,14 @@
     buzz.pause();
     buzz.currentTime = 0;
     stopBtn.style.display = "none";
-  });
 
-  // Global polling to keep buzz alive if suspicious activity logged
-  let buzzPlayed = hasSuspicious;
-
-  async function checkLatestAlert() {
-    try {
-      const res = await fetch('/latest-alert');
-      const data = await res.json();
-
-      if (data.is_suspicious && !buzzPlayed) {
-        buzz.play().catch(e => console.warn("Global autoplay error:", e));
-        buzzPlayed = true;
-        stopBtn.style.display = "inline-block";
-      }
-    } catch (err) {
-      console.error("Failed to fetch latest alert:", err);
+    // Save timestamp of most recent suspicious alert
+    if (latestTimestamp) {
+      localStorage.setItem("buzzStoppedAt", latestTimestamp);
     }
-  }
-
-  setInterval(checkLatestAlert, 5000);
+  });
 </script>
+
 
 </body>
 </html>
