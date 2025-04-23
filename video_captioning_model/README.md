@@ -42,10 +42,10 @@ Visualized sample ground-truth vs. predicted captions.
 
 ![Video dataset overview](docs/ucf_uca_video_overview.png)
 
-## 2. Data Preparation
+## 2. Data Preparation: https://www.kaggle.com/datasets/nourfakih/splitted-ucf-120videospercategory
 1. **Sampling**  
-   - **Abnormal categories**: up to **120 videos** per category (max available, downsampled for resource constraints)  
-   - **Normal class**: **400 videos**  
+   - **Abnormal categories**: up to **120 videos** per category (downsampled for resource constraints)  
+   - **Normal class**: **120 videos**  
 2. **Segmentation**  
    - Split each video into clips based on provided timestamps  
    - Ensure each clip corresponds to a single caption  
@@ -53,6 +53,7 @@ Visualized sample ground-truth vs. predicted captions.
    - Resize frames to model’s input resolution  
    - Normalize pixel values  
    - Cache video tensors for faster loading
+ 
 
 ![Clip segmentation example](docs/ucf_uca_clip_segmentation.png)
 
@@ -60,7 +61,7 @@ Visualized sample ground-truth vs. predicted captions.
 | Split       | # Clips |
 | ----------- | ------- |
 | Training    | 8,500   |
-| Validation  | 500     |
+| Validation  | 1000    |
 | Testing     | 500     |
 
 ## 4. Model Choice & Rationale
@@ -73,6 +74,7 @@ Visualized sample ground-truth vs. predicted captions.
 - **SpaceTimeGPT** (TimeSformer + GPT-2)  
   - Pros: End-to-end video→caption architecture  
   - Cons: Demands substantial memory/compute for large datasets
+  - Our Finetuned model HuggingFace Repository: NourFakih/TimeSformer-GPT2-UCF-7000
 
 ## 5. Training Attempts & Challenges
 - **Initial Training** (`Train-TimeSformerGPT2-UCF.ipynb`)  
