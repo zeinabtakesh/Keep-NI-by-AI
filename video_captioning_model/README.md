@@ -29,8 +29,7 @@
   • **Actions:**  
     1. Loaded the best model checkpoint.  
     2. Ran inference on the test split of 500 clips. 
-    3. Launched training   
-    4. Logged memory usage and early diagnostics 
+
 
 Visualized sample ground-truth vs. predicted captions.
 ---
