@@ -4,6 +4,13 @@
 **Objective:** Build an AI agent to monitor CCTV feeds, detect malicious or anomalous behavior, and issue natural-language alerts.
 
 ---
+# CCTV AI Monitoring – An Intro to Machine Learning Project
+
+## 🔍 Project Motivation
+
+With the increasing demand for automated surveillance in both public and private environments, our project aims to build an intelligent **CCTV AI Monitoring System**. The system is designed to detect **malicious and suspicious behavior** in surveillance footage, providing real-time alerts and captioned descriptions of the scene. By combining computer vision and natural language processing, we propose a dual-approach system leveraging both **image** and **video captioning models**.
+
+Our motivation came from real-world security limitations—human fatigue, late response time, and the volume of camera feeds to monitor simultaneously. Our AI agent acts as a **first line of analysis**, highlighting potential threats automatically.
 
 ## 🚀 Motivation & Vision
 - **Problem:** Traditional CCTV requires human operators who can miss critical events due to fatigue or volume.  
@@ -12,15 +19,6 @@
   - Faster, automated incident detection  
   - Reduced operator workload  
   - Adaptable to new environments via fine-tuning  
-
----
-# CCTV AI Monitoring – An Intro to Machine Learning Project
-
-## 🔍 Project Motivation
-
-With the increasing demand for automated surveillance in both public and private environments, our project aims to build an intelligent **CCTV AI Monitoring System**. The system is designed to detect **malicious and suspicious behavior** in surveillance footage, providing real-time alerts and captioned descriptions of the scene. By combining computer vision and natural language processing, we propose a dual-approach system leveraging both **image** and **video captioning models**.
-
-Our motivation came from real-world security limitations—human fatigue, late response time, and the volume of camera feeds to monitor simultaneously. Our AI agent acts as a **first line of analysis**, highlighting potential threats automatically.
 
 ## 📁 Repository Structure
 
@@ -71,4 +69,3 @@ After evaluating both, we adopted the **image captioning model** for the demo du
 
 ---
 
-Let me know if you want a badge section (e.g., for license, HuggingFace, etc.), or to insert actual image/video previews for better presentation. Next, I can write the `README.md` for the `image-captioning-model/` folder—ready to continue?
