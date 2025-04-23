@@ -31,6 +31,7 @@
   - Moderate GPU/memory requirements.  
   - Strong off-the-shelf image captioning performance.  
   - Easily fine-tuned on custom frame–caption pairs.
+  - Finetuned Model HiggingFace Repository: NourFakih/Vit-GPT2-UCA-UCF-06
 
 ## 5. Dataset Split
 | Split       | # Images |
