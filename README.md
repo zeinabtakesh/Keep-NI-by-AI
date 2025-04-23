@@ -53,12 +53,25 @@ We explored two complementary deep learning pipelines:
 
 After evaluating both, we adopted the **image captioning model** for the demo due to hardware limitations, while preserving video captioning for future work.
 
-## 📦 Output Models & Datasets
+## 📦 Output Models & Datasets (needs to be editted)
 
 | Type               | Link                                                                 |
 |--------------------|----------------------------------------------------------------------|
-| Kaggle Dataset     | [UCF-UCA Sample + Processed](https://www.kaggle.com/) *(add link)*   |
-| HuggingFace Models | [ViT-GPT2 Captioning](https://huggingface.co/) *(add link)*          |
+| Kaggle Dataset     | [UCF-UCA Sample + Processed]([https://www.kaggle.com/](https://www.kaggle.com/datasets/nourfakih/splitted-ucf-120videospercategory))  |
+| HuggingFace Models | [ViT-GPT2 Captioning]([https://huggingface.co/](https://huggingface.co/NourFakih/Vit-GPT2-UCA-UCF-06))    |
+
+
+## 🔗 Why Kaggle & Hugging Face
+
+- **Kaggle for Data & Compute**  
+  - The UCF-UCA dataset is large (hundreds of GB), and we needed a hosted workspace to store, preprocess, and train on it without local infrastructure limits.  
+  - Kaggle provides **up to 12 hours of continuous GPU/TPU** per session, which was essential for our multi-hour training runs and video processing pipelines.  
+  - Alternative (AUB HPC) could not reliably download or mount the full dataset, making local or VM-based workflows infeasible.
+
+- **Hugging Face for Models & Artifacts**  
+  - We selected and fine-tuned **lightweight transformer checkpoints** (ViT-GPT2 and SpaceTimeGPT) directly from Hugging Face’s model hub.  
+  - After training, we host our best-performing model artifacts on Hugging Face for easy sharing, versioning, and integration into our `cctv_app` demo.  
+
 
 ## 🚧 Future Work
 
