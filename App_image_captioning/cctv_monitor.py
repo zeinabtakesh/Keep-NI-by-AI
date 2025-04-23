@@ -333,15 +333,14 @@ Respond with a JSON object containing:
             captions_csv = self.data_dir / "captions.csv"
             self.captions_df.to_csv(captions_csv, index=False)
 
-            # Verify the file was written
             if captions_csv.exists() and captions_csv.stat().st_size > 0:
                 print(f"[DATA] Saved {len(self.captions_df)} records to {captions_csv}")
             else:
                 print(f"[ERROR] Failed to write data to {captions_csv}")
 
-            # Also save a simple metadata text file
+            # Save metadata.txt for chat/report use
             metadata_file = self.data_dir / "metadata.txt"
-            with open(metadata_file, "w") as f:
+            with open(metadata_file, "w", encoding="utf-8") as f:
                 for _, row in self.captions_df.iterrows():
                     f.write(f"Time: {row['timestamp']}\n")
                     f.write(f"Camera: {row['camera_name']}\n")
@@ -351,7 +350,15 @@ Respond with a JSON object containing:
                     f.write(f"Image: {row['image_path']}\n")
                     f.write("-" * 50 + "\n")
                 f.flush()
-                os.fsync(f.fileno())  # Ensure it's written to disk
+                os.fsync(f.fileno())
+
+            # ✅ NEW: Save alerts.json in static/ for global buzz polling
+            static_dir = Path("static")  # <- This ensures Flask can serve it
+            static_dir.mkdir(exist_ok=True)
+            alerts_json_path = static_dir / "alerts.json"
+            with open(alerts_json_path, "w", encoding="utf-8") as f:
+                json.dump(self.captions_df.to_dict(orient="records"), f, indent=2, default=str)
+            print(f"[DATA] alerts.json updated at: {alerts_json_path.resolve()}")
 
         except Exception as e:
             print(f"[ERROR] Failed to save data: {str(e)}")

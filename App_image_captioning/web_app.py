@@ -288,8 +288,19 @@ def upload_video():
 
     return redirect(url_for('dashboard'))
 
+@app.route('/clear-alerts-json', methods=['POST'])
+def clear_alerts_json():
+    try:
+        from pathlib import Path
+        alerts_json_path = Path("static/alerts.json")
+        alerts_json_path.write_text("[]", encoding="utf-8")
+        print("[BUZZ] alerts.json cleared from /clear-alerts-json route.")
+        return '', 204
+    except Exception as e:
+        print(f"[ERROR] Failed to clear alerts.json from buzz button: {e}")
+        return 'Error', 500
 
 
 # ----------------- Start App -----------------
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)  # ← Add host and port
+    app.run(debug=True)  # ← Add host and port

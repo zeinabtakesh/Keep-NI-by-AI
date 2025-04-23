@@ -109,6 +109,35 @@
 
 <!-- Global Buzz (used on all pages) -->
 
+<audio id="buzz" src="{{ url_for('static', filename='buzz.mp3') }}" preload="auto" loop></audio>
+
+<script>
+  const buzz = document.getElementById("buzz");
+
+  async function checkForSuspiciousActivity() {
+    try {
+      const res = await fetch("/static/alerts.json");
+      const alerts = await res.json();
+      const suspicious = alerts.some(alert => alert.is_suspicious);
+
+      const latestTimestamp = suspicious
+        ? alerts.find(alert => alert.is_suspicious).timestamp
+        : null;
+      const lastStoppedAt = localStorage.getItem("buzzStoppedAt");
+
+      const shouldBuzz = suspicious && latestTimestamp !== lastStoppedAt;
+
+      if (shouldBuzz) {
+        buzz.play().catch(err => console.warn("Autoplay failed:", err));
+      }
+    } catch (err) {
+      console.warn("Could not check alerts:", err);
+    }
+  }
+
+  setInterval(checkForSuspiciousActivity, 5000);
+  checkForSuspiciousActivity();
+</script>
 
 </body>
 </html>
