@@ -1,7 +1,7 @@
-FROM python:3.9
+FROM python:3.9-slim
 WORKDIR /app
 COPY . .
-RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host pypi.python.org -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 EXPOSE 5000
 CMD ["python", "web_app.py"]
 
