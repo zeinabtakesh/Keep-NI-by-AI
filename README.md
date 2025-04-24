@@ -7,6 +7,7 @@
 # CCTV AI Monitoring – An Intro to Machine Learning Project
 
 ## 🔍 Project Motivation
+
 ![Screenshot 2025-04-24 123849](https://github.com/user-attachments/assets/757d1ead-45e9-47c0-b6ee-723b9df3fdbb)
 
 
