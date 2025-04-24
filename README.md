@@ -1,4 +1,4 @@
-# Keep NI (An Eye) by AI
+# Keep NI (An Eye) by AI  ![logo](https://github.com/user-attachments/assets/c631e93d-145b-4da0-ac84-7a54e9ac2f1e) 
 ## CCTV-AI Monitoring
 
 **Objective:** Build an AI agent to monitor CCTV feeds, detect malicious or anomalous behavior, and issue natural-language alerts.
