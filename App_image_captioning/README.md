@@ -1,6 +1,6 @@
 # AI-Powered CCTV Monitoring System
 
-This system provides real-time CCTV monitoring with AI-powered suspicious activity detection, using the Neleac/SpaceTimeGPT model for image captioning and ChatGPT for analysis.
+This system provides real-time CCTV monitoring with AI-powered suspicious activity detection, using the Vit-GPT2 model for image captioning and ChatGPT for analysis.
 
 ## Features
 
