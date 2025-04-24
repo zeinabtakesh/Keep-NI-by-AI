@@ -11,7 +11,7 @@
 
 ## 2. Data Subsampling
 - **Abnormal categories**: Sampled **50–150 videos** per category (maximum available).  
-- **Normal class**: Sampled **400 videos** from the pool of 800.  
+- **Normal class**: Sampled **200 videos** from the pool of 800.  
 - **Reason**:  
   - Limited storage and compute (Kaggle environment).  
   - Maintain balanced representation across categories.
@@ -49,7 +49,7 @@
 ## 7. Evaluation Metrics
 | Metric    | Score |
 | --------- | ----- |
-| ROUGE-L   | 25.25 |
+| ROUGE-L   | 40 |
 
 
 ## 8. Observations & Next Steps
