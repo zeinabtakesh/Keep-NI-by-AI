@@ -42,6 +42,8 @@ This repository is divided into three main parts:
 - Built with Python and includes interaction with the **ChatGPT API** for intelligent feedback.
 - Readme documents the setup, metadata logging, limitations, and planned interface features.
 
+Note that we have also provided a summary for each notebook to facilitate the work.
+
 ## 💡 Our Approach
 
 We explored two complementary deep learning pipelines:
