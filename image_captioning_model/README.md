@@ -49,7 +49,7 @@
 ## 7. Evaluation Metrics
 | Metric    | Score |
 | --------- | ----- |
-| ROUGE-L   | 40 |
+| ROUGE-L   |34.6 |
 
 
 ## 8. Observations & Next Steps
