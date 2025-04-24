@@ -85,7 +85,9 @@ After evaluating both, we adopted the **image captioning model** for the demo du
 - Implement suspicious behavior classification and anomaly detection.
 - Enable continuous learning and feedback loops for model improvement.
 
-*Important Note*:
+*Important Note (1)*:
 While the 3 of us worked on the models, we have only used 1 account on Kaggle(Nour's account), because it was the only account having free GPU. Fatima and Zainab's accounts needed phone verification to access GPU, but Kaggle is not offering it currently in Lebanon.
 ---
 
+*Important Note (2)*:
+Our Image Captioning website is dockarized for sure!
