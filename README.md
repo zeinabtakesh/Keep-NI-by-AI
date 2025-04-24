@@ -7,6 +7,8 @@
 # CCTV AI Monitoring – An Intro to Machine Learning Project
 
 ## 🔍 Project Motivation
+![Screenshot 2025-04-24 123849](https://github.com/user-attachments/assets/757d1ead-45e9-47c0-b6ee-723b9df3fdbb)
+
 
 With the increasing demand for automated surveillance in both public and private environments, our project aims to build an intelligent **CCTV AI Monitoring System**. The system is designed to detect **malicious and suspicious behavior** in surveillance footage, providing real-time alerts and captioned descriptions of the scene. By combining computer vision and natural language processing, we propose a dual-approach system leveraging both **image** and **video captioning models**.
 
