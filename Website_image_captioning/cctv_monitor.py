@@ -47,8 +47,9 @@ class CCTVMonitor:
         self.client = OpenAI(api_key=self.openai_api_key)
 
         # Initialize image inference engine
-        self.inference_engine = ImageInferenceEngine()
-
+        model_path = os.getenv("MODEL_PATH", "/app/NourFakih-Vit-GPT2-UCA-UCF-07")
+        self.inference_engine = ImageInferenceEngine(model_path=model_path)
+        
         # Initialize camera capture
         self.cap = cv2.VideoCapture(0)
         if not self.cap.isOpened():
