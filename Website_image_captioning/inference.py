@@ -78,6 +78,7 @@ class ImageInferenceEngine:
         self.worker_thread.start()
         print("[INFERENCE] Worker thread started")
 
+
     def stop_worker(self):
         """Stop the background worker thread."""
         self.running = False
