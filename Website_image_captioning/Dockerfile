@@ -23,6 +23,8 @@ RUN mv "/app/repo-temp/The Model" /app/NourFakih-Vit-GPT2-UCA-UCF-07
 # Set environment variable for the model path
 ENV MODEL_PATH=/app/NourFakih-Vit-GPT2-UCA-UCF-07
 
+ENV OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
 # Expose app port
 EXPOSE 5000
 
