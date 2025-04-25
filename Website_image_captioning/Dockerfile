@@ -17,7 +17,11 @@ RUN apt-get update && apt-get install -y git
 RUN git clone https://github.com/zeinabtakesh/Keep-NI-by-AI.git /app/repo-temp
 
 # Copy just the model folder to the correct location
-RUN mv /app/repo-temp/The\ Model /app/NourFakih-Vit-GPT2-UCA-UCF-07ENV MODEL_PATH=/app/NourFakih-Vit-GPT2-UCA-UCF-07
+# Move model from repo subfolder
+RUN mv "/app/repo-temp/The Model" /app/NourFakih-Vit-GPT2-UCA-UCF-07
+
+# Set environment variable for the model path
+ENV MODEL_PATH=/app/NourFakih-Vit-GPT2-UCA-UCF-07
 
 # Expose app port
 EXPOSE 5000
