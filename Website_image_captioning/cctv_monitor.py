@@ -25,7 +25,7 @@ class CCTVMonitor:
 
         # Load environment variables
         load_dotenv()
-        self.openai_api_key = "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"
+        self.openai_api_key = os.getenv('OPENAI_API_KEY')
         if not self.openai_api_key:
             raise ValueError("OpenAI API key not found in .env file")
 
