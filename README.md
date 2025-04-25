@@ -90,5 +90,5 @@ While the 3 of us worked on the models, we have only used 1 account on Kaggle(No
 ---
 
 *Important Note (2)*:
-Our Image Captioning website is dockarized for sure!
+Our Image Captioning website is dockerized for sure!
 ---
