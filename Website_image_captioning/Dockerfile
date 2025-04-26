@@ -18,7 +18,13 @@ RUN git clone https://github.com/zeinabtakesh/Keep-NI-by-AI.git /app/repo-temp
 
 # Copy just the model folder to the correct location
 # Move model from repo subfolder
-RUN mv "/app/repo-temp/The Model" /app/NourFakih-Vit-GPT2-UCA-UCF-07
+# Create the model folder
+# RUN mkdir -p /app/NourFakih-Vit-GPT2-UCA-UCF-07
+
+# Move ONLY the files from "The Model" into the target directory
+RUN mv "/app/repo-temp/The Model/"* /app/NourFakih-Vit-GPT2-UCA-UCF-07/
+
+# RUN mv "/app/repo-temp/The Model" /app/NourFakih-Vit-GPT2-UCA-UCF-07
 
 # Set environment variable for the model path
 ENV MODEL_PATH=/app/NourFakih-Vit-GPT2-UCA-UCF-07
