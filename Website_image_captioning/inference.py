@@ -193,6 +193,9 @@ class ImageInferenceEngine:
 
             print(f"[INFERENCE] Processing image: {image_path} ({file_size} bytes)")
 
+            # Load the image using PIL
+            image = Image.open(image_path)
+
             # Generate caption using the pipeline
             result = self.image_captioner(
                 image,

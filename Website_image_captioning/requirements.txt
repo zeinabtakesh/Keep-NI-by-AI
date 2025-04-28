@@ -11,3 +11,6 @@ av
 tqdm
 torch==2.1.2+cpu
 flask
+# Core dependencies
+werkzeug
+torchvision==0.16.2+cpu

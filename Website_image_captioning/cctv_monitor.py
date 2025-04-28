@@ -50,17 +50,6 @@ class CCTVMonitor:
         model_path = os.getenv("MODEL_PATH", "/app/NourFakih-Vit-GPT2-UCA-UCF-07")
         self.inference_engine = ImageInferenceEngine(model_path=model_path)
         
-        # Initialize camera capture
-        self.cap = cv2.VideoCapture(0)
-        if not self.cap.isOpened():
-            raise RuntimeError("Could not open video source")
-        self.fps = self.cap.get(cv2.CAP_PROP_FPS) or 30.0
-        print(f"[INIT] Using FPS: {self.fps}")
-
-        # Frame counters and settings
-        self.frame_interval = 100  # Process captioning every 100 frames
-        self.frame_counter = 0  # Counter for frame buffering
-
         # Data tracking (log captions/analysis)
         self.captions_df = pd.DataFrame(columns=[
             'timestamp', 'camera_name', 'caption',
@@ -189,6 +178,56 @@ class CCTVMonitor:
             import traceback
             traceback.print_exc()
 
+    def process_uploaded_image(self, image_path, camera_name="Uploaded Image"):
+        """Process an uploaded image file.
+        
+        Args:
+            image_path: Path to the uploaded image
+            camera_name: Name/source of the image
+            
+        Returns:
+            Caption and analysis results
+        """
+        try:
+            timestamp = datetime.now()
+            
+            # Load the image using PIL
+            pil_image = Image.open(image_path)
+            
+            # Generate caption
+            caption = self.inference_engine.caption_image(pil_image)
+            print(f"[CAPTION] Generated for {image_path}: {caption}")
+            
+            # Skip analysis for empty or error captions
+            if caption.startswith("Error") or not caption:
+                analysis = {'is_suspicious': False, 'reason': 'No valid caption', 'confidence': 0.0}
+            else:
+                # Analyze the caption with OpenAI
+                analysis = self.analyze_suspicious_activity(caption)
+            
+            # Save to dataframe
+            new_row = pd.DataFrame([{
+                'timestamp': timestamp,
+                'camera_name': camera_name,
+                'caption': caption,
+                'is_suspicious': analysis.get('is_suspicious', False),
+                'reason': analysis.get('reason', 'Normal activity'),
+                'confidence': analysis.get('confidence', 0.0),
+                'image_path': str(image_path)
+            }])
+            
+            # Add to dataframe and save
+            self.captions_df = pd.concat([self.captions_df, new_row], ignore_index=True)
+            self.save_data()
+            
+            return caption, analysis
+            
+        except Exception as e:
+            print(f"[ERROR] Failed to process uploaded image: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return "Error processing image", {'is_suspicious': False, 'reason': str(e), 'confidence': 0.0}
+
     def analyze_suspicious_activity(self, caption):
         """Send caption to OpenAI Chat API to analyze suspicious activity."""
         prompt = f"""Analyze this CCTV caption and determine if it describes any suspicious activity:
@@ -215,113 +254,6 @@ Respond with a JSON object containing:
         except Exception as e:
             print(f"[ERROR] Failed to parse analysis response: {e}")
             return {'is_suspicious': False, 'reason': 'Parsing error', 'confidence': 0.0}
-
-    def process_image_directly(self, frame):
-        """Process a frame directly without saving to file first."""
-        try:
-            timestamp = datetime.now()
-
-            # Convert BGR to RGB for the inference engine if needed
-            if frame.shape[2] == 3:  # If it's a 3-channel image
-                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            else:
-                rgb_frame = frame
-
-            # Save image to disk
-            image_path = self.save_image(frame, timestamp)
-            if not image_path:
-                return None, None
-
-            # Convert to PIL Image for the captioning model
-            pil_image = Image.fromarray(rgb_frame)
-
-            # Generate caption directly (blocking call)
-            caption = self.inference_engine.caption_image(pil_image)
-            print(f"[DIRECT_CAPTION] Generated: {caption}")
-
-            # Skip GPT analysis for empty or error captions
-            if caption.startswith("Error") or not caption:
-                analysis = {'is_suspicious': False, 'reason': 'No valid caption', 'confidence': 0.0}
-            else:
-                # Analyze the caption
-                analysis = self.analyze_suspicious_activity(caption)
-
-            # Save the results immediately
-            new_row = pd.DataFrame([{
-                'timestamp': timestamp,
-                'camera_name': 'Camera 1',
-                'caption': caption,
-                'is_suspicious': analysis.get('is_suspicious', False),
-                'reason': analysis.get('reason', 'Normal activity'),
-                'confidence': analysis.get('confidence', 0.0),
-                'image_path': str(image_path)
-            }])
-
-            # Add the row and immediately save to disk
-            self.captions_df = pd.concat([self.captions_df, new_row], ignore_index=True)
-            self.save_data()
-
-            return caption, analysis
-        except Exception as e:
-            print(f"[ERROR] Frame processing failed: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            return "Error processing frame", {'is_suspicious': False}
-
-    def run(self):
-        """Main loop for capturing frames and processing them."""
-        self.frame_counter = 0
-
-        try:
-            print("[INFO] Starting camera capture...")
-            while True:
-                # Capture frame-by-frame
-                ret, frame = self.cap.read()
-                if not ret:
-                    print("[ERROR] Failed to capture frame")
-                    break
-
-                # Increment frame counter
-                self.frame_counter += 1
-
-                # Process every frame_interval frames
-                if self.frame_counter % self.frame_interval == 0:
-                    print(f"[INFO] Processing frame {self.frame_counter}")
-
-                    # Process the frame directly
-                    caption, analysis = self.process_image_directly(frame)
-
-                    if caption and analysis:
-                        is_suspicious = analysis.get('is_suspicious', False)
-                        confidence = analysis.get('confidence', 0.0)
-
-                        # Display caption and analysis info on the frame
-                        status = "SUSPICIOUS" if is_suspicious else "Normal"
-                        cv2.putText(frame, f"Caption: {caption[:50]}...", (10, 30),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                        cv2.putText(frame, f"Status: {status} ({confidence:.2f})", (10, 60),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7,
-                                    (0, 0, 255) if is_suspicious else (0, 255, 0), 2)
-
-                # Display the resulting frame
-                cv2.imshow('CCTV Monitor', frame)
-
-                # Break the loop when 'q' is pressed
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-
-        except KeyboardInterrupt:
-            print("\n[INFO] Interrupted by user")
-        except Exception as e:
-            print(f"[ERROR] Exception during monitoring: {e}")
-            import traceback
-            traceback.print_exc()
-        finally:
-            # Release the capture and close windows
-            if self.cap is not None and self.cap.isOpened():
-                self.cap.release()
-            cv2.destroyAllWindows()
-            print("[INFO] Camera released and windows closed")
 
     def save_data(self):
         """Persist the collected captions and analysis data."""
@@ -433,34 +365,6 @@ Respond with a JSON object containing:
             traceback.print_exc()
             return "Error generating report. Please check logs."
 
-
-    #
-#     def generate_report(self):
-#         """Generate and save a summary report via ChatGPT API based on logged metadata."""
-#         try:
-#             with open(self.data_dir / "metadata.txt", "r") as f:
-#                 metadata = f.read()
-#             prompt = f"""Generate a summary report of the CCTV monitoring data:
-#
-# {metadata}
-#
-# Please provide:
-# 1. Total number of suspicious activities
-# 2. Timeline of events
-# 3. Most common types of suspicious activities
-# 4. Recommendations for security improvements
-# """
-#             response = self.client.chat.completions.create(
-#                 model="gpt-3.5-turbo",
-#                 messages=[{"role": "user", "content": prompt}]
-#             )
-#             report = response.choices[0].message.content
-#             with open(self.data_dir / "daily_report.txt", "w") as f:
-#                 f.write(report)
-#             return report
-#         except Exception as e:
-#             print(f"[ERROR] Report generation failed: {str(e)}")
-#             return "Error generating report. Please check logs."
     def query_events(self, query):
         """Query logged events using ChatGPT API."""
         try:
@@ -516,17 +420,16 @@ Respond with a JSON object containing:
 
 
 if __name__ == "__main__":
-    # Optionally specify a custom storage path
-    custom_path = r"C:\Users\Lenovo\OneDrive\Desktop\cctv"
-    monitor = CCTVMonitor(storage_path=custom_path)
-    try:
-        monitor.run()
-    except KeyboardInterrupt:
-        print("\n[SHUTDOWN] Stopping monitoring...")
-    finally:
-        monitor.save_data()
-        report = monitor.generate_report()
-        print("[INFO] Daily report generated.")
-        print(f"[COMPLETE] Final storage location: {monitor.get_current_storage_path()}")
-        print(f"[REPORT] {report}")
-        print("[INFO] CCTV monitoring session ended.")
+    # Example of processing an uploaded image
+    monitor = CCTVMonitor()
+    
+    # Example: Process a test image if available
+    test_image = "static/test_image.jpg"
+    if os.path.exists(test_image):
+        caption, analysis = monitor.process_uploaded_image(test_image, "Test Image")
+        print(f"Caption: {caption}")
+        print(f"Analysis: {analysis}")
+    
+    # Generate report
+    report = monitor.generate_report()
+    print(f"Report: {report[:200]}...")

@@ -3,6 +3,7 @@ import argparse
 import sys
 import signal
 import time
+import os
 
 
 def handle_signal(signum, frame):
@@ -17,11 +18,12 @@ def main():
     signal.signal(signal.SIGTERM, handle_signal)
 
     parser = argparse.ArgumentParser(description='CCTV Monitoring System')
-    parser.add_argument('--mode', choices=['monitor', 'report', 'query'], required=True,
-                        help='Operation mode: monitor (live monitoring), report (generate report), or query (search past events)')
+    parser.add_argument('--mode', choices=['process', 'report', 'query'], required=True,
+                        help='Operation mode: process (process image file), report (generate report), or query (search past events)')
     parser.add_argument('--query', help='Query string for searching past events')
     parser.add_argument('--storage', default=None,
                         help='Custom storage path for data (default: ~/CCTV_Monitoring)')
+    parser.add_argument('--file', help='Path to image file to process')
 
     args = parser.parse_args()
 
@@ -29,20 +31,31 @@ def main():
         print("[STARTUP] Initializing CCTV Monitor...")
         monitor = CCTVMonitor(storage_path=args.storage)
 
-        if args.mode == 'monitor':
-            print("[STARTUP] Starting CCTV monitoring... Press 'q' to quit.")
+        if args.mode == 'process':
+            if not args.file:
+                print("[ERROR] Please provide an image file path using --file")
+                sys.exit(1)
+                
+            if not os.path.exists(args.file):
+                print(f"[ERROR] File does not exist: {args.file}")
+                sys.exit(1)
+                
+            print(f"[PROCESS] Processing image file: {args.file}")
             try:
-                monitor.run()
-            except KeyboardInterrupt:
-                print("\n[SHUTDOWN] User interrupted monitoring.")
+                caption, analysis = monitor.process_uploaded_image(args.file)
+                print("\n[RESULT] Image Processing Results:")
+                print("-" * 50)
+                print(f"Caption: {caption}")
+                print(f"Suspicious: {analysis.get('is_suspicious', False)}")
+                if analysis.get('is_suspicious', False):
+                    print(f"Reason: {analysis.get('reason', 'Unknown')}")
+                    print(f"Confidence: {analysis.get('confidence', 0.0)}")
+                print("-" * 50)
+                print("[PROCESS] Image processed and data saved.")
             except Exception as e:
-                print(f"\n[ERROR] Monitoring error: {str(e)}")
+                print(f"\n[ERROR] Processing error: {str(e)}")
                 import traceback
                 traceback.print_exc()
-            finally:
-                print("[SHUTDOWN] Saving data and shutting down...")
-                monitor.save_data()
-                print("[SHUTDOWN] Monitoring stopped. Data saved.")
 
         elif args.mode == 'report':
             print("[REPORT] Generating daily report...")
@@ -77,4 +90,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

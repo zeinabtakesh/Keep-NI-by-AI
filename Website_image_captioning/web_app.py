@@ -300,6 +300,46 @@ def clear_alerts_json():
         print(f"[ERROR] Failed to clear alerts.json from buzz button: {e}")
         return 'Error', 500
 
+@app.route('/upload-image', methods=['POST'])
+def upload_image():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    try:
+        file = request.files.get('image')
+        if not file:
+            flash("No image file provided.", "danger")
+            return redirect(url_for('dashboard'))
+
+        # Save the uploaded image
+        upload_folder = os.path.join("static", "uploads")
+        os.makedirs(upload_folder, exist_ok=True)
+        
+        # Ensure unique filename
+        filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}"
+        image_path = os.path.join(upload_folder, filename)
+        file.save(image_path)
+
+        # Process the image with CCTVMonitor
+        from cctv_monitor import CCTVMonitor
+        monitor = CCTVMonitor()
+        
+        caption, analysis = monitor.process_uploaded_image(image_path, camera_name="Uploaded Image")
+        
+        if caption.startswith("Error"):
+            flash(f"Error processing image: {caption}", "danger")
+        else:
+            suspicious_status = "Suspicious" if analysis.get('is_suspicious', False) else "Normal"
+            flash(f"Image processed successfully. Caption: '{caption}'. Status: {suspicious_status}", "success")
+        
+        return redirect(url_for('alerts'))
+            
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        flash(f"An error occurred while processing the image: {str(e)}", "danger")
+        
+    return redirect(url_for('dashboard'))
 
 # ----------------- Start App -----------------
 if __name__ == '__main__':
