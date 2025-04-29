@@ -13,7 +13,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build . -t nourfakih2/image-captioning
+          docker build -t image-captioning ./Website_image_captioning
 
       - name: Publish Docker image
         run: |
