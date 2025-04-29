@@ -92,4 +92,7 @@ While the 3 of us worked on the models, we have only used 1 account on Kaggle(No
 *Important Note (2)*:
 Our Image Captioning website is dockerized for sure!
 The docker image is uploaded to github.
+Docker: 
+docker pull ghcr.io/zeinabtakesh/keep-ni-by-ai:latest
+docker run --rm -p 5000:5000 ghcr.io/zeinabtakesh/keep-ni-by-ai:latest
 ---
