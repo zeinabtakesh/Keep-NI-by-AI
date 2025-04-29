@@ -1,0 +1,21 @@
+name: Publish image to Docker Hub
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish_image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build Docker image
+        run: |
+          docker build -t image-captioning ./Website_image_captioning
+
+      - name: Publish Docker image
+        run: |
+          docker login -u nourfakih2 -p"${{ secrets.DOCKER_HUB_USERNAME }}"
+          docker push nourfakih2/image-captioning
