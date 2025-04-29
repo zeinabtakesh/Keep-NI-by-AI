@@ -37,8 +37,8 @@ EXPOSE 5000
 # Run your app
 CMD ["python", "web_app.py"]
 
-# Expose app port
-EXPOSE 5000
+# # Expose app port
+# EXPOSE 5000
 
-# Run your app
-CMD ["python", "web_app.py"]
+# # Run your app
+# CMD ["python", "web_app.py"]
