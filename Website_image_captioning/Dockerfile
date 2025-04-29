@@ -22,7 +22,7 @@ RUN git clone https://github.com/zeinabtakesh/Keep-NI-by-AI.git /app/repo-temp
 # RUN mkdir -p /app/NourFakih-Vit-GPT2-UCA-UCF-07
 # Move files after making sure destination folder exists
 RUN mkdir -p /app/NourFakih-Vit-GPT2-UCA-UCF-07 && \
-    mv "/app/repo-temp/Website_image_captioning/The Model/"* /app/NourFakih-Vit-GPT2-UCA-UCF-07/
+    mv "/app/repo-temp/The Model/"* /app/NourFakih-Vit-GPT2-UCA-UCF-07/
 # Move ONLY the files from "The Model" into the target directory
 # RUN mv "/app/repo-temp/Website_image_captioning/The Model"/* /app/NourFakih-Vit-GPT2-UCA-UCF-07/
 
