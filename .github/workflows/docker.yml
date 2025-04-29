@@ -14,8 +14,3 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t image-captioning ./Website_image_captioning
-
-      - name: Publish Docker image
-        run: |
-          docker login -u nourfakih2 -p"${{ secrets.DOCKER_HUB_USERNAME }}"
-          docker push nourfakih2/image-captioning
