@@ -21,15 +21,15 @@ RUN git clone https://github.com/zeinabtakesh/Keep-NI-by-AI.git /app/repo-temp
 # Create the model folder
 # RUN mkdir -p /app/NourFakih-Vit-GPT2-UCA-UCF-07
 # Move files after making sure destination folder exists
-RUN mkdir -p /app/NourFakih-Vit-GPT2-UCA-UCF-07 && \
-    mv "/app/repo-temp/The Model/"* /app/NourFakih-Vit-GPT2-UCA-UCF-07/
+# RUN mkdir -p /app/NourFakih-Vit-GPT2-UCA-UCF-07 && \
+#     mv "/app/repo-temp/The Model/"* /app/NourFakih-Vit-GPT2-UCA-UCF-07/
 # Move ONLY the files from "The Model" into the target directory
 # RUN mv "/app/repo-temp/Website_image_captioning/The Model"/* /app/NourFakih-Vit-GPT2-UCA-UCF-07/
 
 ## RUN mv "/app/repo-temp/The Model" /app/NourFakih-Vit-GPT2-UCA-UCF-07
 
 # Set environment variable for the model path
-ENV MODEL_PATH=/app/NourFakih-Vit-GPT2-UCA-UCF-07
+#ENV MODEL_PATH=/app/NourFakih-Vit-GPT2-UCA-UCF-07
 
 # Expose app port
 EXPOSE 5000
