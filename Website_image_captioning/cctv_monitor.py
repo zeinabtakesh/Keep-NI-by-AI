@@ -47,7 +47,54 @@ class CCTVMonitor:
         self.client = OpenAI(api_key=self.openai_api_key)
 
         # Initialize image inference engine
-        model_path = os.getenv("MODEL_PATH", "/app/NourFakih-Vit-GPT2-UCA-UCF-07")
+        model_path = os.getenv("MODEL_PATH", "./NourFakih-Vit-GPT2-UCA-UCF-07")
+        
+        # Check if model files exist and have all necessary components
+        required_files = ["config.json", "pytorch_model.bin", "tokenizer_config.json", "vocab.json", "merges.txt", "model.safetensors"]
+        missing_files = []
+        
+        if not os.path.exists(model_path):
+            print(f"[WARNING] Model directory not found at {model_path}")
+            missing_files = required_files
+        else:
+            # Check for specific required files
+            for file in required_files:
+                if not os.path.exists(os.path.join(model_path, file)):
+                    missing_files.append(file)
+            
+            if missing_files:
+                print(f"[WARNING] Missing required model files in {model_path}: {', '.join(missing_files)}")
+        
+        # Download model if any required files are missing
+        if missing_files:
+            print(f"[INFO] Downloading model from Hugging Face...")
+            try:
+                from transformers import VisionEncoderDecoderModel, ViTImageProcessor, AutoTokenizer
+                
+                # Define the Hugging Face model ID
+                hf_model_id = "NourFakih/Vit-GPT2-UCA-UCF-07"
+                
+                # Create the directory if it doesn't exist
+                os.makedirs(model_path, exist_ok=True)
+                
+                # Download model components directly
+                model = VisionEncoderDecoderModel.from_pretrained(hf_model_id)
+                processor = ViTImageProcessor.from_pretrained(hf_model_id)
+                tokenizer = AutoTokenizer.from_pretrained(hf_model_id)
+                
+                # Save components locally
+                model.save_pretrained(model_path)
+                processor.save_pretrained(model_path)
+                tokenizer.save_pretrained(model_path)
+                
+                print(f"[SUCCESS] Model downloaded and saved to {model_path}")
+            except Exception as e:
+                print(f"[ERROR] Failed to download model: {str(e)}")
+                print("[FALLBACK] Using Hugging Face model directly...")
+                model_path = "NourFakih/Vit-GPT2-UCA-UCF-07"
+        else:
+            print(f"[INFO] Using existing model at {model_path}")
+        
         self.inference_engine = ImageInferenceEngine(model_path=model_path)
         
         # Data tracking (log captions/analysis)
