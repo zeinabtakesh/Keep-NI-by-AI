@@ -14,7 +14,7 @@ RUN pip3 install --no-cache-dir --upgrade pip && \
 RUN apt-get update && apt-get install -y git
 
 # Clone the full repo
-RUN git clone https://github.com/zeinabtakesh/Keep-NI-by-AI.git /app/repo-temp
+# RUN git clone https://github.com/zeinabtakesh/Keep-NI-by-AI.git /app/repo-temp
 
 # Copy just the model folder to the correct location
 # Move model from repo subfolder
